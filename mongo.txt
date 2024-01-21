@@ -1,0 +1,214 @@
+1-customers:
+[
+  { _id: 1, customername: 'John Doe', city: 'New York' },
+  { _id: 2, customername: 'Jane Smith', city: 'London' },
+  { _id: 3, customername: 'David Wang', city: 'Beijing' },
+  { _id: 4, customername: 'Lisa Chen', city: 'Shanghai' }
+]
+
+2- orders:
+[
+  { _id: 1001, customerId: 1, total: 200 },
+  { _id: 1002, customerId: 2, total: 150 },
+  { _id: 1003, customerId: 3, total: 300 },
+  { _id: 1004, customerId: 1, total: 120 }
+]
+
+3-Products:
+[
+  { _id: 1, productName: 'Laptop', price: 1000 },
+  { _id: 2, productName: 'Smartphone', price: 900 },
+  { _id: 3, productName: 'Tablet', price: 500 },
+  { _id: 4, productName: 'TV', price: 1500 }
+]
+
+---------------------------------------------------------------------------------
+
+1-Retrieve the names of all customers.
+
+-- db.customers.aggregate([{$project:{_id:0,customername:1}}])
+
+-- db.customers.find({}).forEach((val) => {print(val.customername)})
+
+---------------------------------------------------------------------------------
+
+2- Retrieve the total number of orders placed.
+
+-- db.orders.aggregate([{$group:{_id:null,totalorders:{$sum:1}}}]).forEach((val) => {print('total number of order placed :',val.totalorders)} )
+
+---------------------------------------------------------------------------------
+
+3- Retrieve the details of the order with OrderID 1003.
+
+--db.orders.aggregate([{$lookup:{from:"customers",localField:"customerId",foreignField:"_id",as:"customers"}},{$match:{_id:1003}}])
+
+---------------------------------------------------------------------------------
+
+4- Retrieve the names of customers who are from Beijing.
+
+-- db.customers.aggregate([{$match:{city:"Beijing"}}]).forEach((val) => {print(val.customername)})
+
+---------------------------------------------------------------------------------
+
+5-Retrieve the total price of all orders.
+
+-- db.orders.aggregate([{$group:{_id:null,sum:{$sum:"$total"}}},{$project:{_id:0,sum:1}}])
+
+---------------------------------------------------------------------------------
+
+6-Retrieve the product names and their prices.
+
+-- db.products.aggregate([{ $project: { _id: 0 } }]).forEach((val) => {print('product name :', val.productName, ', price :', val.price);})
+
+---------------------------------------------------------------------------------
+
+7-Retrieve the names of customers along with their city.
+
+--db.customers.aggregate([{$project:{_id:0}}]).forEach((doc) => {print('name :',doc.customername,'- city :',doc.city)} )
+
+---------------------------------------------------------------------------------
+
+8-Retrieve the orders placed by John Doe (CustomerID 1).
+
+--db.customers.aggregate([{$match:{customername:'John Doe'}},{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$unwind:"$Orders"},{$project:{_id:0,Orders:1}}])
+
+---------------------------------------------------------------------------------
+
+9-Retrieve the customers who have placed orders.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"orders"}},{$match:{orders:{$exists:true,$ne:[]}}},{$project:{_id:0,customername:1}}])
+
+
+---------------------------------------------------------------------------------
+
+10-Retrieve the orders placed by customers from Shanghai.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"orders"}},{$match:{city:"Shanghai"}},{$project:{_id:0,orders:1}}]).forEach((doc) => {print(doc.orders)} )
+
+---------------------------------------------------------------------------------
+
+11-Retrieve the highest price from the Products table.
+
+--db.products.aggregate([{$group:{_id:null,Highestprice:{$max:"$price"}}}])
+
+
+---------------------------------------------------------------------------------
+
+12-Retrieve the average price of all products.
+
+-- db.products.aggregate([{$group:{_id:null,Averageprice:{$avg:"$price"}}}])
+
+---------------------------------------------------------------------------------
+
+13-Retrieve the details of customers who have placed orders.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$match:{Orders:{$ne:[]}}}])
+
+---------------------------------------------------------------------------------
+
+14-Retrieve the names of customers who have not placed any orders.
+
+--db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$match:{Orders:[]}}])
+
+
+---------------------------------------------------------------------------------
+
+15-Retrieve the customer names along with the total order value.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$project:{_id:0,customername:1,totalOrdervalue:{$sum:"$Orders.total"}}}])
+
+---------------------------------------------------------------------------------
+
+16-Retrieve the orders placed in descending order of their total value.
+
+
+-- db.orders.aggregate([{$sort:{total:-1}}])
+
+---------------------------------------------------------------------------------
+
+17-Retrieve the product names along with their prices, sorted by price in descending order.
+
+-- db.products.aggregate([{$sort:{price:-1}},{$project:{_id:0,productName:1,price:1}}])
+
+---------------------------------------------------------------------------------
+
+18-Retrieve the names of customers along with the number of orders they have placed
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$project:{costumername:1,numberoforders:{$size:"$Orders"}}}])
+
+
+---------------------------------------------------------------------------------
+
+19-Retrieve the orders placed by customers from London.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$match:{city:"London"}},{$project:{_id:0,city:1,Orders:1}}])
+
+---------------------------------------------------------------------------------
+
+20-Insert a new customer with ID 5, name 'Emma Wilson', and city 'Paris'.
+
+-- db.customers.insertOne({_id:5,customername:'Emma Wilson',city:'Paris'})
+
+---------------------------------------------------------------------------------
+
+21-Update the city of the customer with ID 3 to 'Tokyo'.
+
+-- db.customers.updateOne({_id:3},{$set:{city:'Tokyo'}})
+
+---------------------------------------------------------------------------------
+
+22-Update the price of the product with ID 2 to 900.
+
+--db.products.updateOne({_id:2},{$set:{price:900}})
+
+---------------------------------------------------------------------------------
+
+23-Delete the order with OrderID 1002.
+
+-- db.orders.deleteOne({_id:1002})
+
+---------------------------------------------------------------------------------
+
+24-Retrieve the names of customers and their cities using aliases.
+
+--db.customers.aggregate([{$project:{_id:0,Name:"$customername",cityOfCustomer:"$city"}}])
+
+---------------------------------------------------------------------------------
+
+25-Retrieve the customer names along with their total order value, sorted by order value in descending order
+
+--db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$unwind:"$Orders"},{$group:{_id:"$_id",customername:{$last:"$customername"},totalOrderValue:{$sum:"$Orders.total"}}},{$sort:{"totalOrderValue":-1}}])
+
+---------------------------------------------------------------------------------
+
+26-Retrieve the customer names along with the number of orders they have placed, sorted by the number of orders in ascending order.
+
+--db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$sort:{Orders:1}},{$project:{_id:0,customername:1,NumberOfOrders:{$size:"$Orders"}}}])
+
+---------------------------------------------------------------------------------
+
+27-Retrieve the customer names along with the average order value, sorted by the average order value in descending order.
+
+-- db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$project:{_id:0,customername:1,AverageOrdervalue:{$avg:"$Orders.total"}}},{$sort:{AverageOrdervalue:-1}}])
+
+---------------------------------------------------------------------------------
+
+28-Calculate the total price of all orders placed by customers from Beijing.
+
+--  db.customers.aggregate([{$match:{city:"Beijing"}},{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$unwind:"$Orders"},{$group:{_id:null,Totalprice:{$sum:"$Orders.total"}}},{$project:{_id:0}}])
+
+---------------------------------------------------------------------------------
+
+29-Calculate the average price of products in the Tablet category.
+
+--db.products.aggregate([{$match:{productName:"Tablet"}},{$group:{_id:null,averageprice:{$avg:"$price"}}},{$project:{_id:0,averageprice:1}}])
+
+---------------------------------------------------------------------------------
+
+30-Calculate the total revenue generated by each customer.
+
+
+--  db.customers.aggregate([{$lookup:{from:"orders",localField:"_id",foreignField:"customerId",as:"Orders"}},{$unwind:"$Orders"},{$group:{_id:"$_id",Name:{$first:"$customername"},Revenue:{$sum:"$Orders.total"}}}])
+
+---------------------------------------------------------------------------------
+
